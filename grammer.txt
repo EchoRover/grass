@@ -1,0 +1,9 @@
+* = more
+expression : Term ((PLUS or MINUS) Term)*
+
+Term : factor ((MUL or DIV) factor)*
+
+factor : INT|FLOAT
+         (PLUS or MINUS) factor    
+         LPARAM
+         RPARAM

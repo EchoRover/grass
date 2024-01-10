@@ -1,64 +1,12 @@
-
-line = 'print "hello, world"'
-DIGITS = "0123456789"
-T_INT = "INT"
-T_FLOAT = "FLOAT"
-T_PLUS = "PLUS"
-T_MINUS ="MINUS"
-T_MUL = "MUL"
-T_DIV = "DIV"
-T_RPARM = "RPARM"
-T_LPARM = "LPARM"
+from globaltools import *
 
 # ERRORS 
-class Error:
-    def __init__(self,error_name,details,atstart,atend):
-        self.error = error_name
-        self.atstart = atstart
-        self.atend = atend
-        self.details = details
-    
-    def stringfy(self):
-        result = f"{self.error}:{self.details}"
-        result += f"\nFile {self.atstart.file_name}, at line {self.atstart.line_no + 1}"
-        return result
-
 
 class IllegalCharError(Error):
     def __init__(self,details,error_start_cursor,error_end_cursor):
         super().__init__('Illegal Charater',details,error_start_cursor,error_end_cursor)
 
-#TOKENS
-class Token:
-    def __init__(self,type_,value = None):
-        self.type = type_
-        self.value = value
-    def __repr__(self):
-        if self.value:
-            return f"{self.type}:{self.value}"
-        else:
-            return self.type
-#POSITIONS
 
-class WHEREAMI:
-    def __init__(self,exact_position,line_no,column_no,file_name,file_content):
-        self.exact_position = exact_position
-        self.line_no = line_no
-        self.column_no = column_no
-        self.file_content = file_content
-        self.file_name = file_name
-    
-    def updata_position(self,char):
-        self.exact_position += 1
-        self.column_no += 1
-        if char == "\n":
-            self.line_no += 1
-            self.column_no = 0
-
-        return self
-    
-    def copy(self):
-        return WHEREAMI(self.exact_position,self.line_no,self.column_no,self.file_name,self.file_content)
 
 
 #LEXER
@@ -86,22 +34,25 @@ class Lexer:
                 
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
+                continue
                 
 
             elif self.current_char in "+-/*()":
                 match self.current_char:
                     case "+":
-                        tokens.append(Token(T_PLUS))
+                        tokens.append(Token(T_PLUS,pos_start = self.cursor ))
                     case "-":
-                        tokens.append(Token(T_MINUS))
+                        tokens.append(Token(T_MINUS,pos_start = self.cursor))
                     case "*":
-                        tokens.append(Token(T_MUL))
+                        tokens.append(Token(T_MUL,pos_start = self.cursor))
                     case "/":
-                        tokens.append(Token(T_DIV))
+                        tokens.append(Token(T_DIV,pos_start = self.cursor))
                     case ")":
-                        tokens.append(Token(T_LPARM))
+                        tokens.append(Token(T_RPARM,pos_start = self.cursor))
                     case "(":
-                        tokens.append(Token(T_RPARM))
+                        tokens.append(Token(T_LPARM,pos_start = self.cursor))
+                
+                
                 
             
             else:
@@ -113,12 +64,13 @@ class Lexer:
 
 
             self.next_char()
-        
+        tokens.append(Token(T_EOF,pos_start = self.cursor))
         return tokens,None
     
     def make_number(self):
         number = ''
         dot_count = 0
+        start = self.cursor.copy()
 
         while self.current_char != None and self.current_char in DIGITS + ".":
             if self.current_char == ".":
@@ -134,10 +86,11 @@ class Lexer:
                 number += self.current_char
             
             self.next_char()
+        end = self.cursor.copy()
         if dot_count == 0:
-            return Token(T_INT,int(number))
+            return Token(T_INT,int(number),pos_start  = start,pos_end = end)
         else:
-            return Token(T_FLOAT,float(number))
+            return Token(T_FLOAT,float(number),pos_start = start,pos_end = end)
 
 
 
