@@ -37,7 +37,7 @@ class Lexer:
                 continue
                 
 
-            elif self.current_char in "+-/*()":
+            elif self.current_char in "+-/*()^":
                 match self.current_char:
                     case "+":
                         tokens.append(Token(T_PLUS,pos_start = self.cursor ))
@@ -45,6 +45,8 @@ class Lexer:
                         tokens.append(Token(T_MINUS,pos_start = self.cursor))
                     case "*":
                         tokens.append(Token(T_MUL,pos_start = self.cursor))
+                    case "^":
+                        tokens.append(Token(T_POW,pos_start = self.cursor))
                     case "/":
                         tokens.append(Token(T_DIV,pos_start = self.cursor))
                     case ")":

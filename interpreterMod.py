@@ -60,6 +60,12 @@ class Number:
         if isinstance(other,Number):
             return Number(self.value * other.value).set_context(self.context),None
         return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    
+    def power_by(self,other):
+        if isinstance(other,Number):
+            return Number(self.value ** other.value).set_context(self.context),None
+        print("Hihg")
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
         
     def divided_by(self,other):
         if isinstance(other,Number):
@@ -129,6 +135,8 @@ class Interpreter:
             result,error = left.multiply(right)
         elif node.token.type == T_DIV:
             result,error = left.divided_by(right)
+        elif node.token.type == T_POW:
+            result,error = left.power_by(right)
         
         if error:
             return response.failure(error)
@@ -138,7 +146,7 @@ class Interpreter:
 
 
     def visit_UnaryOperationNode(self,node,context):
-        response = CheckInterpreterResult
+        response = CheckInterpreterResult()
         number = response.register(self.visit(node.node,context))
         if response.error:
             return response

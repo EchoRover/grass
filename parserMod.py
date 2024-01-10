@@ -78,21 +78,12 @@ class Parser:
         if not result.error and self.current_token.type != T_EOF:
             return result.failure(InvalidSyntaxError("Excepted + - / *",self.current_token.pos_start,self.current_token.pos_end))
         return result
-
     
-    def factor(self):
-
+    def atom(self):
         response = CheckParserResult()
         token = self.current_token 
 
-        if token.type in (T_PLUS,T_MINUS):
-            response.register(self.move_cursor())
-            myfactor = response.register(self.factor())
-            if response.error:
-                return response
-            return response.success(UnaryOperationNode(token,myfactor))
-
-        elif token.type in (T_INT,T_FLOAT):
+        if token.type in (T_INT,T_FLOAT):
             response.register(self.move_cursor())
             return response.success(NumberNode(token))
         
@@ -106,10 +97,31 @@ class Parser:
                 return response.success(expr)
             else:
                 return response.failure(InvalidSyntaxError('Expected " ) "',self.current_token.pos_start,self.current_token.pos_end))
+        else:
+            return response.failure(InvalidSyntaxError("Excepted + - int float (",self.current_token.pos_start,self.current_token.pos_end))
+    
+    def power(self):
+        return self.binaryOpertation(self.atom,(T_POW,),self.factor)
 
 
+
+    
+    def factor(self):
+        response = CheckParserResult()
+        token = self.current_token 
+
+        if token.type in (T_PLUS,T_MINUS):
+            response.register(self.move_cursor())
+            myfactor = response.register(self.factor())
+            if response.error:
+                return response
+            return response.success(UnaryOperationNode(token,myfactor))
         
-        return response.failure(InvalidSyntaxError("Expected  Int for Float",token.pos_start,token.pos_end))
+        return self.power()
+
+
+
+
 
         
     
@@ -121,7 +133,10 @@ class Parser:
 
      
     
-    def binaryOpertation(self,sidefunc,operations):
+    def binaryOpertation(self,sidefunc,operations,sidefunc2 = None):
+        if sidefunc2 == None:
+            sidefunc2 = sidefunc
+
         response = CheckParserResult()
         left = response.register(sidefunc())
         if response.error:
@@ -129,7 +144,7 @@ class Parser:
         while self.current_token.type in operations:
             operation_token = self.current_token
             response.register(self.move_cursor())
-            right = response.register(sidefunc())
+            right = response.register(sidefunc2())
             if response.error:
                 return response
             left = BinaryOperationNode(left,operation_token,right)
