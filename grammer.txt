@@ -1,14 +1,29 @@
 * = more
-expression : Term ((PLUS or MINUS) Term)*
 
-Term : factor ((MUL or DIV) factor)*
 
-factor : (PLUS or MINUS) factor  
-        : power
+expression :KEYWORD: VAR IDENTIFIER EQUAL expr
+            comp-expr ((AND|OR) comp-expr)
 
-power : atom (POW factor) *
+comp-exr   :Not comp-expr
+            arthexp ((EQUAL|NOTEQUAL|GREATER|LESSER|GE|LE),arthexp)
+           
+arthexp    : Term ((PLUS or MINUS) Term)*
+
+Term       : factor ((MUL or DIV) factor)*
+
+factor     : (PLUS or MINUS) factor  
+           : power
+
+power      : atom (POW factor)*
          
-atom :INT|FLOAT
-      LPARAM expr RPARAM
+atom       :INT|FLOAT|IDENTIFIER
+            LPARAM expr RPARAM
+            if_expression
+
+if_expression:KEYWORD:IF expression KEYWORD:THEN expr
+              (KEYWORD:ELIF expr KEYWORD:THEN expr)*
+              (KEYWORD:ELSE expr)?
+
+
 
 

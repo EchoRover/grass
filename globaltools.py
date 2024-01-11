@@ -1,6 +1,11 @@
 line = 'print "hello, world"'
 
+T_IDENTIFIER = "IDENTIFIER"
+T_KEYWORD = "KEYWORD"
+T_EQUAL = "EQUAL"
+LETTERS = "abcdefghijklmnopqrstuvwxyz" + "abcdefghijklmnopqrstuvwxyz".upper()
 DIGITS = "0123456789"
+ALPHANUM = LETTERS + DIGITS
 T_INT = "INT"
 T_FLOAT = "FLOAT"
 T_PLUS = "PLUS"
@@ -10,9 +15,43 @@ T_POW = "POW"
 T_DIV = "DIV"
 T_RPARM = "RPARM"
 T_LPARM = "LPARM"
-
 T_EOF = "EOF"
 
+T_DOBEQUAL = "DOUBLE_EQUAL"
+T_NOTEQUAL = "NOT_EQUAL"
+T_GREATERTHEN = "GREATER_THEN"
+T_LESSTHEN = "LESS_THEN"
+T_GREATEREQUALTHEN = "GREATER_EQUAL_THEN"
+T_LESSEREQUALTHEN = "LESSER_EQUAL_THEN"
+
+
+K_NULL = "null"
+K_TRUE = "true"
+K_FALSE = "false"
+
+K_VAR = "VAR"
+K_AND = "AND"
+K_OR = "OR"
+K_NOT = "NOT"
+K_IF = "IF"
+K_ELSE = "ELSE"
+K_THEN = "THEN"
+K_ELIF = "ELIF"
+
+
+
+KEYWORDS = [
+    K_VAR,
+    K_AND,
+    K_OR,
+    K_NOT,
+    K_IF,
+    K_THEN,
+    K_ELIF,
+    K_ELSE
+    
+
+]
 #ERRORS
 
 class Error:
@@ -49,6 +88,12 @@ class Token:
             self.pos_end.updata_position()
         if pos_end:
             self.pos_end = pos_end.copy()
+    
+    def matches(self,type_,value):
+        return self.type == type_ and self.value == value
+
+    
+
 
 
     def __repr__(self):

@@ -26,10 +26,6 @@ class RuntimeError(Error):
         return 'Traceback (most recent call last):\n' + result
 
     
-    
-
-
-
 #DATA TYPES
 
 class Number:
@@ -47,6 +43,12 @@ class Number:
     def set_context(self,context = None):
         self.context = context
         return self
+    def copy(self):
+        copy = Number(self.value)
+        copy.set_pos(self.pos_start,self.pos_end)
+        copy.set_context(self.context)
+        return copy
+
     def add(self,other):
         if isinstance(other,Number):
             return Number(self.value + other.value).set_context(self.context),None
@@ -64,7 +66,6 @@ class Number:
     def power_by(self,other):
         if isinstance(other,Number):
             return Number(self.value ** other.value).set_context(self.context),None
-        print("Hihg")
         return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
         
     def divided_by(self,other):
@@ -74,6 +75,48 @@ class Number:
                 other.pos_start,other.pos_end,self.context)
             return Number(self.value / other.value).set_context(self.context),None
         return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    
+    def equal_to(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value == other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    def not_equal_to(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value != other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    def greater_than(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value > other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    def lesser_than(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value < other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    def greater_than_equal(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value >= other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    def lesser_than_equal(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value <= other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    
+    def anded(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value and other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    def ored(self,other):
+        if isinstance(other,Number):
+            return Number(int(self.value or other.value)).set_context(self.context),None
+        return None,RuntimeError("Type Error",other.pos_start,other.pos_end)
+    
+    def notted(self):
+        return Number(1 if self.value == 0 else 0).set_context(self.context),None
+    
+    def is_true(self):
+        return self.value != 0
+   
+
         
 #Context
 
@@ -82,6 +125,26 @@ class Context:
         self.display_name = display_name
         self.parent = parent
         self.parent_entry_pos = parent_entry_pos
+        self.symbol_table = None
+
+
+#symbols
+
+class Symbols:
+    def __init__(self):
+        self.symbols = {}
+        self.parent = None
+    
+    def get(self,name):
+        value = self.symbols.get(name,None)
+        if value == None and self.parent:
+            return self.parent.get(name)
+        return value
+    def set_var(self,name,value):
+        self.symbols[name] = value
+
+    def remove(self,name):
+        del self.symbols[name]
 
 #Interpreter
 
@@ -108,6 +171,45 @@ class Interpreter:
     
     def no_visit_method(self,node,context):
         raise Exception(f"no visit_{type(node).__name__}")
+    
+    def visit_IfNode(self,node,context):
+        response = CheckInterpreterResult()
+        for condition,expr in node.cases:
+            condition_val = response.register(self.visit(condition,context))
+
+            if response.error:
+                return response
+            if condition_val.is_true():
+                expression_val = response.register(self.visit(expr,context))
+                if response.error:
+                    return response
+                return response.success(expression_val)
+        if node.else_case:
+            expression_val = response.register(self.visit(node.else_case,context))
+            if response.error:
+                return response
+            return response.success(expression_val)
+        return response.success(None)
+
+    
+    def visit_VarAccessNode(self,node,context):
+        response = CheckInterpreterResult()
+        var_name = node.var_name_token.value
+        value = context.symbol_table.get(var_name)
+
+        if not value:
+            return response.failure(RuntimeError(f"{var_name} not defined",node.pos_start,node.pos_end,context))
+        value = value.copy().set_pos(node.pos_start,node.pos_end)
+        return response.success(value)
+    
+    def visit_VarAssignNode(self,node,context):
+        response = CheckInterpreterResult()
+        var_name = node.name_token.value
+        value = response.register(self.visit(node.value_node,context))
+        if response.error:
+            return response
+        context.symbol_table.set_var(var_name,value)
+        return response.success(value)
 
 
     def visit_NumberNode(self,node,context):
@@ -138,6 +240,23 @@ class Interpreter:
         elif node.token.type == T_POW:
             result,error = left.power_by(right)
         
+        elif node.token.type == T_DOBEQUAL:
+            result,error = left.equal_to(right) 
+        elif node.token.type == T_NOTEQUAL:
+            result,error = left.not_equal_to(right)
+        elif node.token.type == T_GREATERTHEN:
+            result,error = left.greater_than(right)
+        elif node.token.type == T_LESSTHEN:
+            result,error = left.lesser_than(right)
+        elif node.token.type == T_GREATEREQUALTHEN:
+            result,error = left.greater_than_equal(right)
+        elif node.token.type == T_LESSEREQUALTHEN:
+            result,error = left.lesser_than_equal(right)
+        elif node.token.matches(T_KEYWORD,K_AND):
+            result,error = left.anded(right)
+        elif node.token.matches(T_KEYWORD,K_OR):
+            result,error = left.ored(right)
+        
         if error:
             return response.failure(error)
         else:
@@ -156,6 +275,8 @@ class Interpreter:
         if node.operator.type == T_MINUS:
           
             number,error = number.multiply(Number(-1))
+        if node.operator.matches(T_KEYWORD,K_NOT):
+            number,error = number.notted()
         if error:
             return response.failure(error)
         else:

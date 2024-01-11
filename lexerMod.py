@@ -5,7 +5,9 @@ from globaltools import *
 class IllegalCharError(Error):
     def __init__(self,details,error_start_cursor,error_end_cursor):
         super().__init__('Illegal Charater',details,error_start_cursor,error_end_cursor)
-
+class ExceptedCharError(Error):
+    def __init__(self,details,error_start_cursor,error_end_cursor):
+        super().__init__('Expected Charater',details,error_start_cursor,error_end_cursor)
 
 
 
@@ -35,9 +37,15 @@ class Lexer:
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
                 continue
+
+            elif self.current_char in ALPHANUM + "_":
+                tokens.append(self.make_identifier())
+                continue
+            
+
                 
 
-            elif self.current_char in "+-/*()^":
+            elif self.current_char in "+-/*()^=><!":
                 match self.current_char:
                     case "+":
                         tokens.append(Token(T_PLUS,pos_start = self.cursor ))
@@ -53,6 +61,21 @@ class Lexer:
                         tokens.append(Token(T_RPARM,pos_start = self.cursor))
                     case "(":
                         tokens.append(Token(T_LPARM,pos_start = self.cursor))
+                    case "=":
+                        tokens.append(self.checkdouble(next_char = "=",othertoken =T_DOBEQUAL,def_token = T_EQUAL))
+                        continue
+                    case ">":
+                        tokens.append(self.checkdouble(next_char = "=",othertoken =T_GREATEREQUALTHEN,def_token = T_GREATERTHEN))
+                        continue
+                    case "<":
+                        tokens.append(self.checkdouble(next_char = "=",othertoken =T_LESSEREQUALTHEN,def_token = T_LESSTHEN))
+                        continue
+                    case "!":
+                        result = self.checkdouble(next_char = "=",othertoken = T_NOTEQUAL,def_token = None)
+                        if type(result) != Token:
+                            return None,ExceptedCharError(" = (after !)",result,self.cursor)
+                        tokens.append(result)
+                        continue
                 
                 
                 
@@ -68,6 +91,17 @@ class Lexer:
             self.next_char()
         tokens.append(Token(T_EOF,pos_start = self.cursor))
         return tokens,None
+    
+    def checkdouble(self,next_char,othertoken,def_token):
+        start = self.cursor.copy()
+        self.next_char()
+        if self.current_char != None and self.current_char == next_char:
+            end = self.cursor.copy()
+            self.next_char()
+            return Token(othertoken,pos_start = start,pos_end = end)
+        else:
+            if not def_token: return start
+            return Token(def_token,pos_start = start)
     
     def make_number(self):
         number = ''
@@ -93,6 +127,28 @@ class Lexer:
             return Token(T_INT,int(number),pos_start  = start,pos_end = end)
         else:
             return Token(T_FLOAT,float(number),pos_start = start,pos_end = end)
+    
+    def make_string(self):
+        string = ""
+        start = self.cursor.copy()
+
+        while self.current_char != None and self.current_char in ALPHANUM + "_":
+            ...
+    
+    def make_identifier(self):
+        id_str = ""
+        start = self.cursor.copy()
+
+        while self.current_char != None and self.current_char in ALPHANUM + "_":
+            id_str += self.current_char
+            self.next_char()
+        if id_str in KEYWORDS:
+            return Token(T_KEYWORD,id_str,pos_start = start,pos_end = self.cursor.copy())
+        return Token(T_IDENTIFIER,id_str,pos_start = start,pos_end = self.cursor.copy())
+         
+        
+
+
 
 
 
