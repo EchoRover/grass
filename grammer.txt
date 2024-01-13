@@ -19,10 +19,16 @@ power      : atom (POW factor)*
 atom       :INT|FLOAT|IDENTIFIER
             LPARAM expr RPARAM
             if_expression
+            for_expression
+            while_expression
 
 if_expression:KEYWORD:IF expression KEYWORD:THEN expr
               (KEYWORD:ELIF expr KEYWORD:THEN expr)*
               (KEYWORD:ELSE expr)?
+for_expression:KEYWORD:FOR IDENTIFIER EQUAL expression KEYWORD:TO expression
+            (KEYWORD:STEP expr)? KEYWORD:THEN expression
+
+while_expression:KEYWORDL WHILE expr KEYWORD:THEN expression
 
 
 

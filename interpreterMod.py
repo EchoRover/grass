@@ -190,6 +190,52 @@ class Interpreter:
                 return response
             return response.success(expression_val)
         return response.success(None)
+    
+    def visit_ForNode(self,node,context):
+        response = CheckInterpreterResult()
+        start_val = response.register(self.visit(node.start_val,context))
+        if response.error:return response
+
+        end_val = response.register(self.visit(node.end_val,context))
+        if response.error:return response
+
+        if node.step_val:
+            step_val = response.register(visit(node.step_val,context))
+            if response.error:return response
+        else:
+            step_val = Number(1)
+        
+        i = start_val.value
+        
+        if step_val.value >= 0:
+            condition = lambda : i < end_val.value
+        else:
+            condition = lambda : i > end_val.value
+        
+        while condition():
+            context.symbol_table.set_var(node.var_name_token.value,Number(i))
+            i += step_val.value
+
+            response.register(self.visit(node.bodyNode,context))
+            if response.error:
+                return response
+        return response.success(None)
+    
+    def visit_WhileNode(self,node,context):
+        response = CheckInterpreterResult()
+        
+        while True:
+            condition = response.register(self.visit(node.condition_node,context))
+            if response.error:
+                return response
+            if not condition.is_true():
+                break
+            response.register(self.visit(node.bodyNode,context))
+            if response.error:
+                return response
+        return response.success(None)
+
+
 
     
     def visit_VarAccessNode(self,node,context):
@@ -256,6 +302,7 @@ class Interpreter:
             result,error = left.anded(right)
         elif node.token.matches(T_KEYWORD,K_OR):
             result,error = left.ored(right)
+        print(node.token)
         
         if error:
             return response.failure(error)

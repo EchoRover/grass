@@ -38,6 +38,13 @@ K_ELSE = "ELSE"
 K_THEN = "THEN"
 K_ELIF = "ELIF"
 
+K_FOR = "FOR"
+K_TO = "TO"
+K_WHILE = "WHILE"
+K_STEP = "STEP"
+
+
+
 
 
 KEYWORDS = [
@@ -48,7 +55,12 @@ KEYWORDS = [
     K_IF,
     K_THEN,
     K_ELIF,
-    K_ELSE
+    K_ELSE,
+
+    K_STEP,
+    K_TO,
+    K_WHILE,
+    K_FOR
     
 
 ]

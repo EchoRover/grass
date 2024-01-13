@@ -5,7 +5,11 @@ print("Grass 0.0.5")
 
 
 #-1-
-# print(run("VAR a = 1","<shell>"))
+print(run("VAR result = 1","<shell>"))
+print(run("WHILE result < 10 THEN VAR result = result + 1  ","<shell>"))
+
+print(run("result","<shell>"))
+
 # quit()
 
 while True:

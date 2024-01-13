@@ -17,7 +17,7 @@ def run(text,filename):
     if error:
         return error.stringfy()
     
-    # print(tokens)
+    print(tokens)
 
     #parser
 
@@ -26,7 +26,7 @@ def run(text,filename):
     if ast.error:
         return ast.error.stringfy()
     
-    # print(ast.node,"ast nodes")
+    print(ast.node,"ast nodes")
     
     interpreter = Interpreter()
     context = Context('<program>')
